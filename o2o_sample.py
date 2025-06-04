@@ -446,7 +446,7 @@ if submit_button:
         """
         
         # Streamlit에 HTML 삽입
-        components.html(html_content, height=400)
+        components.html(html_content, height=600)
         
         # 범례 표시
         st.markdown("""
