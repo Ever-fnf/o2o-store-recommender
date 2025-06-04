@@ -387,7 +387,7 @@ if submit_button:
         # HTML 템플릿 생성
         html_content = f"""
         <div id="map" style="width:100%; height:600px;"></div>
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}&autoload=false"></script>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}&autoload=false&secure=true"></script>
     <script>
         kakao.maps.load(function() {{
             var container = document.getElementById('map');
