@@ -387,37 +387,35 @@ if submit_button:
         # HTML 템플릿 생성
         html_content = f"""
         <div id="map" style="width:100%; height:600px;"></div>
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}&autoload=false&secure=true"></script>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}"></script>
     <script>
-        kakao.maps.load(function() {{
-            var container = document.getElementById('map');
-            var options = {{
-                center: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
-                level: 5
-            }};
-            var map = new kakao.maps.Map(container, options);
+        var container = document.getElementById('map');
+        var options = {{
+            center: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
+            level: 5
+        }};
+        var map = new kakao.maps.Map(container, options);
 
-            // 고객 마커
-            var customerMarker = new kakao.maps.Marker({{
-                position: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
-                title: '고객 위치'
-            }});
-            customerMarker.setMap(map);
+        // 고객 마커
+        var customerMarker = new kakao.maps.Marker({{
+            position: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
+            title: '고객 위치'
+        }});
+        customerMarker.setMap(map);
 
-            // 매장 마커들
-            """
+        // 매장 마커들
+        """
         for store in store_locations:
             html_content += f"""
-                    var marker = new kakao.maps.Marker({{
-                        position: new kakao.maps.LatLng({store['lat']}, {store['lon']}),
-                        title: '{store['store_id']}'
-                    }});
-                    marker.setMap(map);
+                var marker = new kakao.maps.Marker({{
+                    position: new kakao.maps.LatLng({store['lat']}, {store['lon']}),
+                    title: '{store['store_id']}'
+                }});
+                marker.setMap(map);
             """
 
         html_content += """
-                });
-            </script>
+        </script>
         """
 
         # f"""
