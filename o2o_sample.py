@@ -406,6 +406,20 @@ if submit_button:
 
             // 매장 마커들
             """
+        for store in store_locations:
+            html_content += f"""
+                    var marker = new kakao.maps.Marker({{
+                        position: new kakao.maps.LatLng({store['lat']}, {store['lon']}),
+                        title: '{store['store_id']}'
+                    }});
+                    marker.setMap(map);
+            """
+
+        html_content += """
+                });
+            </script>
+        """
+
         # f"""
         #     <div id="map" style="width:100%;height:400px;"></div>
         #     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}"></script>
@@ -435,36 +449,36 @@ if submit_button:
         #         var storePositions = [
         # """
         
-        # 매장 위치 데이터 추가
-        for store in store_locations:
-            html_content += f"""
-                    {{
-                        title: '{store["store_id"]}',
-                        latlng: new kakao.maps.LatLng({store["lat"]}, {store["lon"]})
-                    }},
-            """
+        # # 매장 위치 데이터 추가
+        # for store in store_locations:
+        #     html_content += f"""
+        #             {{
+        #                 title: '{store["store_id"]}',
+        #                 latlng: new kakao.maps.LatLng({store["lat"]}, {store["lon"]})
+        #             }},
+        #     """
         
-        html_content += """
-                ];
+        # html_content += """
+        #         ];
                 
-                // 매장 마커 이미지
-                var storeMarkerImage = new kakao.maps.MarkerImage(
-                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-                    new kakao.maps.Size(24, 35),
-                    new kakao.maps.Point(12, 35)
-                );
+        #         // 매장 마커 이미지
+        #         var storeMarkerImage = new kakao.maps.MarkerImage(
+        #             'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+        #             new kakao.maps.Size(24, 35),
+        #             new kakao.maps.Point(12, 35)
+        #         );
                 
-                // 매장 마커들 생성
-                storePositions.forEach(function(pos) {
-                    var marker = new kakao.maps.Marker({
-                        map: map,
-                        position: pos.latlng,
-                        title: pos.title,
-                        image: storeMarkerImage
-                    });
-                });
-            </script>
-        """
+        #         // 매장 마커들 생성
+        #         storePositions.forEach(function(pos) {
+        #             var marker = new kakao.maps.Marker({
+        #                 map: map,
+        #                 position: pos.latlng,
+        #                 title: pos.title,
+        #                 image: storeMarkerImage
+        #             });
+        #         });
+        #     </script>
+        # """
         
         # Streamlit에 HTML 삽입
         components.html(html_content, height=600)
