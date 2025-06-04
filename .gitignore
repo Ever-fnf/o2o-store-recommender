@@ -1,0 +1,14 @@
+# Python 가상환경
+venv/
+.venv/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# 파일 확장자
+*.pyc
+*.pyo
+*.pyd
+*.pyw
+*.pyz
+*.cfg
