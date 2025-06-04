@@ -7,8 +7,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from xgboost import XGBClassifier
 import requests
-import pydeck as pdk
 import time
+import streamlit.components.v1 as components
 
 # Seed 고정
 random.seed(42)
@@ -318,11 +318,10 @@ if submit_button:
                 st.success(f"📍 검색된 좌표: {customer_lat:.6f}, {customer_lon:.6f}")
     
     recommended_stores = recommend_top_n_stores(
-    customer_lat, customer_lon, product_id,
-    store_df, model_resp, model_ship
+        customer_lat, customer_lon, product_id,
+        store_df, model_resp, model_ship
     )
 
-    
     if len(recommended_stores) > 0:
         st.subheader("📊 추천 매장 목록")
         
@@ -368,122 +367,96 @@ if submit_button:
         # 지도 표시
         st.subheader("📍 위치 정보")
         
-        # 고객 위치 데이터
-        customer_point = pd.DataFrame({
-            'lat': [customer_lat],
-            'lon': [customer_lon],
-            'label': ['고객 위치'],
-            'store_id': ['고객의 위치'],
-            'response_prob_str': [f"위도: {customer_lat:.6f}"],
-            'distance_str': [f"경도: {customer_lon:.6f}"]
-        })
+        # 카카오 맵 API 키 가져오기
+        KAKAO_MAP_API_KEY = st.secrets["kakao_map_api_key"]
         
-        # 매장 위치 데이터
-        store_points = pd.DataFrame({
-            'lat': recommended_stores['store_lat'],
-            'lon': recommended_stores['store_lon'],
-            'store_id': recommended_stores['store_id'],
-            'response_prob': recommended_stores['response_prob'],
-            'distance': recommended_stores['distance_km']
-        })
-        
-        # 포맷팅된 문자열 컬럼 생성
-        store_points['response_prob_str'] = store_points['response_prob'].apply(lambda x: f"응답확률: {x:.1%}")
-        store_points['distance_str'] = store_points['distance'].apply(lambda x: f"거리: {x:.1f}km")
-        
-        # 매장 라벨 생성 (store_id)
-        store_points['label'] = store_points['store_id']
-        
-        # 고객 위치 레이어 (ScatterplotLayer)
-        customer_layer = pdk.Layer(
-            'ScatterplotLayer',
-            data=customer_point,
-            get_position='[lon, lat]',
-            get_radius=100,
-            get_fill_color=[65, 105, 225],  # 파란색
-            pickable=True
-        )
-        
-        # 고객 위치 텍스트 레이어
-        customer_text_layer = pdk.Layer(
-            'TextLayer',
-            data=customer_point,
-            get_position='[lon, lat]',
-            get_text='label',
-            get_size=16,
-            get_color=[65, 105, 225],
-            get_angle=0,
-            get_text_anchor='"middle"',
-            get_alignment_baseline='"center"',
-            pickable=False,  # 텍스트 레이어는 툴팁 비활성화
-            offset=[0, -20]
-        )
-        
-        # 매장 위치 레이어 (ScatterplotLayer)
-        store_layer = pdk.Layer(
-            'ScatterplotLayer',
-            data=store_points,
-            get_position='[lon, lat]',
-            get_radius=80,
-            get_fill_color=[255, 0, 0],  # 빨간색
-            pickable=True
-        )
-        
-        # 매장 ID 텍스트 레이어
-        store_text_layer = pdk.Layer(
-            'TextLayer',
-            data=store_points,
-            get_position='[lon, lat]',
-            get_text='label',
-            get_size=14,
-            get_color=[255, 255, 255],
-            get_angle=0,
-            get_text_anchor='"middle"',
-            get_alignment_baseline='"center"',
-            pickable=False,  # 텍스트 레이어는 툴팁 비활성화
-            offset=[0, -20]
-        )
-        
-        # 지도 뷰 설정
-        view_state = pdk.ViewState(
-            longitude=customer_lon,
-            latitude=customer_lat,
-            zoom=12.5,
-            pitch=0,
-            bearing=0
-        )
-        
-        # 툴팁 설정
-        tooltip = {
-            "html": "<b>{store_id}</b><br/>"
-                   "{response_prob_str}<br/>"
-                   "{distance_str}",
-            "style": {
-                "backgroundColor": "steelblue",
-                "color": "white"
-            }
+        # 고객 위치와 매장 위치 데이터 준비
+        customer_location = {
+            "lat": customer_lat,
+            "lon": customer_lon
         }
         
-        # 지도 생성
-        r = pdk.Deck(
-            layers=[customer_layer, customer_text_layer, store_layer, store_text_layer],
-            initial_view_state=view_state,
-            tooltip=tooltip,
-            map_style='road'
-        )
+        store_locations = []
+        for _, store in recommended_stores.iterrows():
+            store_locations.append({
+                "store_id": store['store_id'],
+                "lat": store['store_lat'],
+                "lon": store['store_lon']
+            })
         
-        # Streamlit에 지도 표시
-        st.pydeck_chart(r)
+        # HTML 템플릿 생성
+        html_content = f"""
+            <div id="map" style="width:100%;height:400px;"></div>
+            <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}"></script>
+            <script>
+                var container = document.getElementById('map');
+                var options = {{
+                    center: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
+                    level: 5
+                }};
+                var map = new kakao.maps.Map(container, options);
+                
+                // 고객 위치 마커 (파란색)
+                var customerMarkerImage = new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                    new kakao.maps.Size(24, 35),
+                    new kakao.maps.Point(12, 35)
+                );
+                
+                var customerMarker = new kakao.maps.Marker({{
+                    position: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
+                    title: '고객 위치',
+                    image: customerMarkerImage
+                }});
+                customerMarker.setMap(map);
+                
+                // 매장 위치 마커들 (빨간색)
+                var storePositions = [
+        """
+        
+        # 매장 위치 데이터 추가
+        for store in store_locations:
+            html_content += f"""
+                    {{
+                        title: '{store["store_id"]}',
+                        latlng: new kakao.maps.LatLng({store["lat"]}, {store["lon"]})
+                    }},
+            """
+        
+        html_content += """
+                ];
+                
+                // 매장 마커 이미지
+                var storeMarkerImage = new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                    new kakao.maps.Size(24, 35),
+                    new kakao.maps.Point(12, 35)
+                );
+                
+                // 매장 마커들 생성
+                storePositions.forEach(function(pos) {
+                    var marker = new kakao.maps.Marker({
+                        map: map,
+                        position: pos.latlng,
+                        title: pos.title,
+                        image: storeMarkerImage
+                    });
+                });
+            </script>
+        """
+        
+        # Streamlit에 HTML 삽입
+        components.html(html_content, height=400)
         
         # 범례 표시
         st.markdown("""
         <div style='display: flex; gap: 20px; margin-top: 10px;'>
             <div style='display: flex; align-items: center;'>
-                <div style='width: 12px; height: 12px; background-color: rgb(65, 105, 225); border-radius: 50%; margin-right: 5px;'></div>
+                <div style='width: 12px; height: 12px; background-color: #2196F3; border-radius: 50%; margin-right: 5px;'></div>
                 <span>고객 위치</span>
             </div>
             <div style='display: flex; align-items: center;'>
-                <div style='width: 12px; height: 12px; background-color: rgb(255, 0, 0); border-radius: 50%; margin-right: 5px;'></div>
+                <div style='width: 12px; height: 12px; background-color: #F44336; border-radius: 50%; margin-right: 5px;'></div>
                 <span>추천 매장</span>
             </div>
         </div>
