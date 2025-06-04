@@ -387,97 +387,52 @@ if submit_button:
         # HTML 템플릿 생성
         html_content = f"""
         <div id="map" style="width:100%; height:600px;"></div>
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}"></script>
-    <script>
-        var container = document.getElementById('map');
-        var options = {{
-            center: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
-            level: 5
-        }};
-        var map = new kakao.maps.Map(container, options);
+        <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}&autoload=false"></script>
+        <script>
+            kakao.maps.load(function() {{
+                var container = document.getElementById('map');
+                var options = {{
+                    center: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
+                    level: 5
+                }};
+                var map = new kakao.maps.Map(container, options);
 
-        // 고객 마커
-        var customerMarker = new kakao.maps.Marker({{
-            position: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
-            title: '고객 위치'
-        }});
-        customerMarker.setMap(map);
+                // 고객 마커 이미지 (파란색)
+                var customerImageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_blue.png';
+                var customerImageSize = new kakao.maps.Size(35, 35);
+                var customerMarkerImage = new kakao.maps.MarkerImage(customerImageSrc, customerImageSize);
 
-        // 매장 마커들
-        """
+                // 고객 마커
+                var customerMarker = new kakao.maps.Marker({{
+                    position: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
+                    title: '고객 위치',
+                    image: customerMarkerImage
+                }});
+                customerMarker.setMap(map);
+
+                // 매장 마커 이미지 (빨간색)
+                var storeImageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_red.png';
+                var storeImageSize = new kakao.maps.Size(35, 35);
+                var storeMarkerImage = new kakao.maps.MarkerImage(storeImageSrc, storeImageSize);
+
+                // 매장 마커들
+                """
+        
         for store in store_locations:
             html_content += f"""
                 var marker = new kakao.maps.Marker({{
                     position: new kakao.maps.LatLng({store['lat']}, {store['lon']}),
-                    title: '{store['store_id']}'
+                    title: '{store['store_id']}',
+                    image: storeMarkerImage
                 }});
                 marker.setMap(map);
             """
 
         html_content += """
+            }});
         </script>
         """
 
-        # f"""
-        #     <div id="map" style="width:100%;height:400px;"></div>
-        #     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={KAKAO_MAP_API_KEY}"></script>
-        #     <script>
-        #         var container = document.getElementById('map');
-        #         var options = {{
-        #             center: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
-        #             level: 5
-        #         }};
-        #         var map = new kakao.maps.Map(container, options);
-                
-        #         // 고객 위치 마커 (파란색)
-        #         var customerMarkerImage = new kakao.maps.MarkerImage(
-        #             'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-        #             new kakao.maps.Size(24, 35),
-        #             new kakao.maps.Point(12, 35)
-        #         );
-                
-        #         var customerMarker = new kakao.maps.Marker({{
-        #             position: new kakao.maps.LatLng({customer_lat}, {customer_lon}),
-        #             title: '고객 위치',
-        #             image: customerMarkerImage
-        #         }});
-        #         customerMarker.setMap(map);
-                
-        #         // 매장 위치 마커들 (빨간색)
-        #         var storePositions = [
-        # """
-        
-        # # 매장 위치 데이터 추가
-        # for store in store_locations:
-        #     html_content += f"""
-        #             {{
-        #                 title: '{store["store_id"]}',
-        #                 latlng: new kakao.maps.LatLng({store["lat"]}, {store["lon"]})
-        #             }},
-        #     """
-        
-        # html_content += """
-        #         ];
-                
-        #         // 매장 마커 이미지
-        #         var storeMarkerImage = new kakao.maps.MarkerImage(
-        #             'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-        #             new kakao.maps.Size(24, 35),
-        #             new kakao.maps.Point(12, 35)
-        #         );
-                
-        #         // 매장 마커들 생성
-        #         storePositions.forEach(function(pos) {
-        #             var marker = new kakao.maps.Marker({
-        #                 map: map,
-        #                 position: pos.latlng,
-        #                 title: pos.title,
-        #                 image: storeMarkerImage
-        #             });
-        #         });
-        #     </script>
-        # """
-        
         # Streamlit에 HTML 삽입
         components.html(html_content, height=600)
         
