@@ -5,3 +5,4 @@ xgboost==2.0.3
 scikit-learn==1.2.2
 geopy==2.4.1
 pydeck==0.8.1b0
+setuptools
