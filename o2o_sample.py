@@ -367,6 +367,22 @@ if submit_button:
         
         # 지도 표시
         st.subheader("📍 위치 정보")
+
+        # CSS로 지도 컨테이너 스타일링
+        css = """
+        <style>
+            [data-testid="stIframe"] {
+                width: 100%;
+                height: 500px;
+            }
+            iframe {
+                width: 100%;
+                min-height: 500px;
+                border: none;
+            }
+        </style>
+        """
+        st.markdown(css, unsafe_allow_html=True)
         
         # 지도 생성 (고객 위치 중심)
         m = folium.Map(
@@ -378,7 +394,7 @@ if submit_button:
         # 고객 위치 마커 (파란색)
         folium.Marker(
             [customer_lat, customer_lon],
-            popup='고객 위치',
+            popup=folium.Popup('고객 위치', max_width=200),
             icon=folium.Icon(color='blue', icon='info-sign')
         ).add_to(m)
         
@@ -386,12 +402,12 @@ if submit_button:
         for _, store in recommended_stores.iterrows():
             folium.Marker(
                 [store['store_lat'], store['store_lon']],
-                popup=f"{store['store_id']} (거리: {store['distance_km']:.1f}km)",
+                popup=folium.Popup(f"{store['store_id']} (보유재고: {store['inventory']})", max_width=200),
                 icon=folium.Icon(color='red', icon='info-sign')
             ).add_to(m)
         
         # Streamlit에 지도 표시
-        folium_static(m)
+        folium_static(m, width=2000, height=500)
         
         # 범례 표시
         st.markdown("""
